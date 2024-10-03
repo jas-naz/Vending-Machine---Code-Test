@@ -19,17 +19,21 @@ However, I decided to go further with as I understood it better as I worked thro
 - The vending machine should also
   return the item and any remaining change if the user has inserted more money than the item costs.
 
-**Install and Run it**:
+**Install it**:
 
 ```
 npm install
+```
+
+**Run it**:
+
+```
 npm run dev
 ```
 
-**How to preview it**:
+**Preview it**:
 
 ```
-npm install
 npm run preview
 ```
 

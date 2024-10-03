@@ -58,6 +58,7 @@ function VendingMachine() {
     (data.coins) && setCoins(data.coins.sort((a, b) => Number(b.value) - Number(a.value)).map((item) => {
       return item;
     }));
+    // console.log("Reloading data:");
     
   }, [resetData]);
   
@@ -71,7 +72,7 @@ function VendingMachine() {
   function handleItemClick(e) {
     setReturns([]);
     setCost(e.target.value);
-    console.log(e.target.value);
+    // console.log(e.target.value);
     // setCoins(coins + 1);
   }
   function handleCoinClick(e) {
@@ -89,7 +90,7 @@ function VendingMachine() {
         return item;
       }
     }));
-    console.log(coins);
+    // console.log(coins);
   }
   function doTotalPaid() {
     let total = 0;
@@ -97,7 +98,7 @@ function VendingMachine() {
       if (item.coin > 0) {
         total = Number(total) + (Number(item.coin) * Number(item.value));
       }
-      console.log("total:", total);
+      // console.log("total:", total);
     })
     return total;
   }
@@ -126,6 +127,7 @@ function VendingMachine() {
   }
 
   return <>
+    <h2>Choose Item:</h2>
     {data.items.map((item, i) => {
       return <button key={i}
         onClick={handleItemClick}
@@ -134,7 +136,8 @@ function VendingMachine() {
     })}
     <div>Cost: ${cost}</div>
     {/* <div><input value={cost} type="text" placeholder="Cost" /></div> */}
-    <div>Insert coins:</div>
+    
+    <h2>Insert coins:</h2>
     {coins && coins.map((item, i) => {
       return <button key={i}
         onClick={handleCoinClick}
@@ -142,21 +145,22 @@ function VendingMachine() {
         disabled={(cost) < 0.05}>{item.name} ${item.value} x {item.coin}</button>
     })}
 
-    <div>
-      {(total > 0) && `Total paid: ${total}`}
+    <div style={{ color: (cost > total) ? "red" : "lightblue"}}>
+      {(total > 0) && `Total paid: $${ total } ${ (cost > total) ? ", add $" + (cost - total) : "lightblue"}`}
     </div>
-    
+
+    <h2>Checkout:</h2>
     <div>
       <button value={cost} onClick={deliverItem}
         disabled={(total) < 0.05}>Pay now</button>
-      {total &&
+      {(total > 0) &&
         <button value={total} onClick={returnCoins}>Return</button>
       }
     </div>
 
-    <div>return coins:</div>
+    <div>Coin return:</div>
     {/* <input type="text" /> */}
-    {returns && returns.map((item, i) => {
+    {(returns && returns.length > 0) && returns.map((item, i) => {
       return <div key={i} style={{color: "lightblue"}}>{item}</div>
     })}
   </>
