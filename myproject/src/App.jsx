@@ -134,7 +134,7 @@ function VendingMachine() {
     })}
     <div>Cost: ${cost}</div>
     {/* <div><input value={cost} type="text" placeholder="Cost" /></div> */}
-    <div>coins:</div>
+    <div>Insert coins:</div>
     {coins && coins.map((item, i) => {
       return <button key={i}
         onClick={handleCoinClick}
