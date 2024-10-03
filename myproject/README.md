@@ -1,8 +1,8 @@
 # Vending Machine [React + Vite]
 
-This is a coding test I was asked to perform for a job. I don't like coding with someone watching but I went ahead and started it. I only had 20 min so I didn't get too far.
+This is a coding test I was asked to perform for an Amazon front-end job. I don't like coding with someone watching but I went ahead and started it. I only had 20 min so I didn't get too far.
 
-However, I decided to go further with as I understood it as I worked through it and read through instructions throuroughly.
+However, I decided to go further with as I understood it better as I worked through it and read the instructions thouroughly.
 
 **Test Instructions**:
 
@@ -38,5 +38,9 @@ npm run preview
 ```
 npm run test
 ```
+
+**TODO:**
+
+- Finish the purchase flow
 
 [jason.nazario.me](https://jason.nazario.me "jason.nazario.me")
