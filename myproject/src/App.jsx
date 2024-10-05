@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
+import { formatMoney } from './utilities.js'
 import './App.css'
 
 /*/ Create a vending machine application that takes in a 
-list of items and a 
-list of coins.
+-list of items and a 
+-list of coins.
 // The vending machine should 
-allow the user to select an item and 
-insert coins to pay for the item.
+-allow the user to select an item and 
+-insert coins to pay for the item.
 // The vending machine should 
 return the item if the user has inserted enough money.
 // If the user has not inserted enough money, 
@@ -52,26 +53,32 @@ function VendingMachine() {
   const [coins, setCoins] = useState(null);
   const [total, setTotal] = useState(0);
   const [returns, setReturns] = useState(null);
-  const [resetData,setResetData] = useState(false);
+  const [resetData, setResetData] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [delivered, setDelivered] = useState(null);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     (data.coins) && setCoins(data.coins.sort((a, b) => Number(b.value) - Number(a.value)).map((item) => {
       return item;
-    }));
-    // console.log("Reloading data:");
+    })); // console.log("Reloading data:");
     
-  }, [resetData]);
+  }, [data.coins, resetData]);
   
   function reset() {
     setCost(0);
     setTotal(0);
     setData(testdata);
     setResetData(!resetData);
+    setMessage(null);
   }
 
   function handleItemClick(e) {
+    // find item in 
+    const item = data.items.find(item => item.name === e.target.value);
     setReturns([]);
-    setCost(e.target.value);
+    setSelected(item);
+    setCost(item.price);
     // console.log(e.target.value);
     // setCoins(coins + 1);
   }
@@ -103,8 +110,19 @@ function VendingMachine() {
     return total;
   }
   function deliverItem() {
-    if (cost <= total) {
-      alert("Change" + (Number(total) - Number(cost)));
+    // const change = Number(total) - Number(cost);
+    if (cost <= total)
+    {
+      // alert(`Thank you! ${ (change != 0) ? 'Change, ' + change : '' } `);
+      delivered ?
+        setDelivered(`${ delivered }, ${ selected.name }`) :
+        setDelivered(selected.name); 
+      setSelected(null);
+      reset();
+      // TODO: return change
+    } else
+    {
+      setMessage("Sorry, you didn't enter enough money to pay for this item.");
     }
   }
   // If the user has not inserted enough money, 
@@ -127,44 +145,86 @@ function VendingMachine() {
   }
 
   return <>
+    <ChooseItem
+      cost={cost}
+      data={data}
+      onClick={handleItemClick}
+    />
+    <InsertCoins
+      coins={coins}
+      cost={cost}
+      onClick={handleCoinClick}
+      total={total}
+    />
+    <Checkout
+      cost={cost}
+      deliverItem={deliverItem}
+      returnCoins={returnCoins}
+      total={total}
+    />
+    {delivered && <>
+      <h3>Delivered:</h3>
+      <div style={{ color: "#00aa23" }}>{delivered}</div>
+    </>
+    }
+    {message && <h4 style={{ color: "#1199ad" }}>{message}</h4>}
+    <CoinReturn returns={ returns } />
+  </>
+}
+
+const ChooseItem = ({cost, data, onClick}) => {
+  return <>
     <h2>Choose Item:</h2>
     {data.items.map((item, i) => {
       return <button key={i}
-        onClick={handleItemClick}
-        value={item.price}
+        onClick={onClick}
+        value={item.name}
       >{item.name} ${item.price}</button>
     })}
-    <div>Cost: ${cost}</div>
-    {/* <div><input value={cost} type="text" placeholder="Cost" /></div> */}
-    
+    {(cost > 0) &&
+      <div>Cost: {formatMoney(cost)}</div>
+    }
+  </>
+}
+
+const InsertCoins = ({coins, cost, onClick, total }) => {
+  return <>
     <h2>Insert coins:</h2>
     {coins && coins.map((item, i) => {
       return <button key={i}
-        onClick={handleCoinClick}
+        onClick={onClick}
         value={item.value}
         disabled={(cost) < 0.05}>{item.name} ${item.value} x {item.coin}</button>
     })}
-
-    <div style={{ color: (cost > total) ? "red" : "lightblue"}}>
-      {(total > 0) && `Total paid: $${ total } ${ (cost > total) ? ", add $" + (cost - total) : "lightblue"}`}
+    <div style={{ color: (cost > total) ? "#c51d07" : "lightblue" }}>
+      {(total > 0) && `Total paid: ${ formatMoney(total) } 
+        ${ (cost > total) && ", add " + formatMoney(cost - total) }`}
     </div>
+  </>
+}
 
+const Checkout = ({cost, deliverItem, returnCoins, total}) => {
+  return <>
     <h2>Checkout:</h2>
     <div>
       <button value={cost} onClick={deliverItem}
         disabled={(total) < 0.05}>Pay now</button>
+      
       {(total > 0) &&
         <button value={total} onClick={returnCoins}>Return</button>
       }
     </div>
+  </>
+}
 
-    <div>Coin return:</div>
-    {/* <input type="text" /> */}
+const CoinReturn = ({returns}) => {
+  return <>
+    <h3>Coin return:</h3>
+    {(!returns || returns.length == 0) && "*Empty*"}
     {(returns && returns.length > 0) && returns.map((item, i) => {
       return <div key={i} style={{color: "lightblue"}}>{item}</div>
     })}
   </>
-
 }
 
 function App() {
