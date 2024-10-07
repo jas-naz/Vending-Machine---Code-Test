@@ -16,6 +16,10 @@ the vending machine should return the coins that were inserted.
 // The vending machine should also 
 return the item and any remaining change if the user has inserted more money than the item costs
 */
+// TODO: error when there is .05 left but user hasnt entered a nickel.
+// Soda 1.50, 3 quarters, 9 dime, 0 nickel
+// returns 1 dime, 
+// should be 1 dime and 1 nickel
 const testdata = {
   items: [
     {
@@ -38,12 +42,12 @@ const testdata = {
       value: 0.05
     },
     {
-      // coin: 10,
+      coin: 9,
       name: 'Dime',
       value: 0.10
     },
     {
-      // coin: 3,
+      coin: 2,
       name: 'Quarter',
       value: 0.25
     }
@@ -146,28 +150,36 @@ function VendingMachine() {
     
     // return exact coins
     coins.map((item) => {
-      if (item.coin > 0 && item.value <= remaining)
+      if (item.value <= remaining)
       {
-        
-        const count = Number(item.coin);
         let tmpCount = 0;
-
-        if ((count * Number(item.value)) <= remaining)
-        {
-          tmpCount = count;
-          remaining = remaining - (count * Number(item.value));
-        } else
-        {
-          for (let i = 0; i < count; i++)
+        
+        if (item.coin > 0) { 
+          const count = Number(item.coin);
+          if ((count * Number(item.value)) <= remaining)
           {
-            if (roundCeil(remaining) >= item.value) {
-              tmpCount++;
-              remaining = roundCeil(remaining - item.value);
+            tmpCount = count;
+            remaining = roundCeil(remaining - (count * Number(item.value)));
+          } else
+          {
+            for (let i = 0; i < count; i++)
+            {
+              if (roundCeil(remaining) >= item.value) {
+                tmpCount++;
+                remaining = roundCeil(remaining - item.value);
+              }
             }
           }
+        } else // fix for remaining with no coins
+        {
+          tmpCount = roundCeil(remaining / item.value);
         }
+
         totRet.push(item.value * tmpCount);
         coinStr.push(`${ item.name } x ${ tmpCount }`);
+      } else
+      {
+        totRet.push(0);
       }
     })
     
