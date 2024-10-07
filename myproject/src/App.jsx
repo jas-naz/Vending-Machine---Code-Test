@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatMoney } from './utilities.js'
+import { formatMoney, roundCeil } from './utilities.js'
 import './App.css'
 
 /*/ Create a vending machine application that takes in a 
@@ -10,8 +10,9 @@ import './App.css'
 -insert coins to pay for the item.
 // The vending machine should 
 return the item if the user has inserted enough money.
-// If the user has not inserted enough money, 
-the vending machine should return the coins that were inserted.
+// If the user has not inserted enough money, JN-Not sure if this is the correct behaviour
+the vending machine should return the coins that were inserted. 
+
 // The vending machine should also 
 return the item and any remaining change if the user has inserted more money than the item costs
 */
@@ -32,14 +33,17 @@ const testdata = {
   ],
   coins: [
     {
+      // coin: 2,
       name: 'Nickel',
       value: 0.05
     },
     {
+      // coin: 10,
       name: 'Dime',
       value: 0.10
     },
     {
+      // coin: 3,
       name: 'Quarter',
       value: 0.25
     }
@@ -49,19 +53,23 @@ const testdata = {
 function VendingMachine() {
   const [data, setData] = useState(structuredClone(testdata));
 
-  const [cost, setCost] = useState(0);
+  const [cost, setCost] = useState(0); // Cost of item selected
   const [coins, setCoins] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(0); // Total calue of coins inserted
   const [returns, setReturns] = useState(null);
   const [resetData, setResetData] = useState(false);
   const [selected, setSelected] = useState(null);
   const [delivered, setDelivered] = useState(null);
   const [message, setMessage] = useState(null);
+  const [totalReturned, setTotalReturned] = useState(0);
 
   useEffect(() => {
-    (data.coins) && setCoins(data.coins.sort((a, b) => Number(b.value) - Number(a.value)).map((item) => {
-      return item;
-    })); // console.log("Reloading data:");
+    (data.coins) &&
+      setCoins(structuredClone(testdata)
+        .coins.sort((a, b) => Number(b.value) - Number(a.value))
+        .map((item) => {
+          return item;
+    }));
     
   }, [data.coins, resetData]);
   
@@ -74,72 +82,96 @@ function VendingMachine() {
   }
 
   function handleItemClick(e) {
-    // find item in 
     const item = data.items.find(item => item.name === e.target.value);
-    setReturns([]);
     setSelected(item);
     setCost(item.price);
-    // console.log(e.target.value);
-    // setCoins(coins + 1);
+    setReturns([]);
+    setTotalReturned(0);
   }
   function handleCoinClick(e) {
     const newCoins = [...coins];
     setCoins(newCoins.map((item) => {
       if (item.value == e.target.value)
       {
+        setMessage(null);
+        setTotal(doTotalPaid);
         let con = item;
         con.coin = (con.coin) ? con.coin + 1 : 1;
-        
-        setTotal(doTotalPaid);
+
         return con;
       } else
       {
         return item;
       }
     }));
-    // console.log(coins);
   }
+  // function removeCoins() {
+  //   setCoins(coins.map((item) => {
+  //     return item.coin > 0;
+  //   }));
+  // }
   function doTotalPaid() {
     let total = 0;
     coins.map((item) => {
       if (item.coin > 0) {
         total = Number(total) + (Number(item.coin) * Number(item.value));
       }
-      // console.log("total:", total);
     })
     return total;
   }
   function deliverItem() {
-    // const change = Number(total) - Number(cost);
     if (cost <= total)
     {
-      // alert(`Thank you! ${ (change != 0) ? 'Change, ' + change : '' } `);
-      delivered ?
-        setDelivered(`${ delivered }, ${ selected.name }`) :
-        setDelivered(selected.name); 
+      setDelivered(
+        delivered ? `${ delivered }, ${ selected.name }` : selected.name
+      );
       setSelected(null);
       reset();
-      // TODO: return change
+      returnCoins(total - cost);
     } else
     {
       setMessage("Sorry, you didn't enter enough money to pay for this item.");
     }
   }
-  // If the user has not inserted enough money, 
+  // If the user has not inserted enough money, ???
   // the vending machine should return the coins that were inserted.
-  function returnCoins(e) { 
-    let remaining = e.target.value; // 1.00
+  function coinReturn(e) {
+    let remaining = e.target.value;
+    returnCoins(remaining)
+  }
+  function returnCoins(rem) { 
+    let remaining = roundCeil(rem);
     let coinStr = [];
-
+    let totRet = [];
+    
+    // return exact coins
     coins.map((item) => {
       if (item.coin > 0 && item.value <= remaining)
       {
-        const count = Math.floor(item.coin);
-        coinStr.push(`${ item.name } x ${ count }`);
-        // console.log("returned", count);
+        
+        const count = Number(item.coin);
+        let tmpCount = 0;
+
+        if ((count * Number(item.value)) <= remaining)
+        {
+          tmpCount = count;
+          remaining = remaining - (count * Number(item.value));
+        } else
+        {
+          for (let i = 0; i < count; i++)
+          {
+            if (roundCeil(remaining) >= item.value) {
+              tmpCount++;
+              remaining = roundCeil(remaining - item.value);
+            }
+          }
+        }
+        totRet.push(item.value * tmpCount);
+        coinStr.push(`${ item.name } x ${ tmpCount }`);
       }
     })
     
+    setTotalReturned(totRet.reduce((partialSum, a) => partialSum + a, totalReturned));
     setReturns(coinStr);
     reset();
   }
@@ -159,16 +191,19 @@ function VendingMachine() {
     <Checkout
       cost={cost}
       deliverItem={deliverItem}
-      returnCoins={returnCoins}
+      onClick={coinReturn}
       total={total}
     />
+    {message && <h4 className="message">{message}</h4>}
     {delivered && <>
       <h3>Delivered:</h3>
-      <div style={{ color: "#00aa23" }}>{delivered}</div>
+      <div className="delivered">{delivered}</div>
     </>
     }
-    {message && <h4 style={{ color: "#1199ad" }}>{message}</h4>}
-    <CoinReturn returns={ returns } />
+    <CoinReturn returns={returns} />
+    {totalReturned > 0 &&
+      <div>Total Returned: {formatMoney(totalReturned)}</div>
+    }
   </>
 }
 
@@ -194,16 +229,18 @@ const InsertCoins = ({coins, cost, onClick, total }) => {
       return <button key={i}
         onClick={onClick}
         value={item.value}
-        disabled={(cost) < 0.05}>{item.name} ${item.value} x {item.coin}</button>
+        disabled={(cost) < 0.05}>{item.name} {formatMoney(item.value)} x {item.coin}</button>
     })}
-    <div style={{ color: (cost > total) ? "#c51d07" : "lightblue" }}>
+    <div
+      className={ (cost > total) ? "totalsError" : "totals" }
+    >
       {(total > 0) && `Total paid: ${ formatMoney(total) } 
         ${ (cost > total) && ", add " + formatMoney(cost - total) }`}
     </div>
   </>
 }
 
-const Checkout = ({cost, deliverItem, returnCoins, total}) => {
+const Checkout = ({cost, deliverItem, onClick, total}) => {
   return <>
     <h2>Checkout:</h2>
     <div>
@@ -211,7 +248,7 @@ const Checkout = ({cost, deliverItem, returnCoins, total}) => {
         disabled={(total) < 0.05}>Pay now</button>
       
       {(total > 0) &&
-        <button value={total} onClick={returnCoins}>Return</button>
+        <button value={total} onClick={onClick}>Return</button>
       }
     </div>
   </>

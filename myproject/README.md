@@ -43,8 +43,4 @@ npm run preview
 npm run test
 ```
 
-**TODO:**
-
-- Finish the purchase flow
-
 [jason.nazario.me](https://jason.nazario.me "jason.nazario.me")
