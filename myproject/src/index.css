@@ -58,6 +58,19 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.delivered {
+  color: #00aa23;
+}
+.message {
+  color: #1199ad;
+}
+.totalsError {
+  color: #c51d07;
+}
+.totals {
+  color: lightblue;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
