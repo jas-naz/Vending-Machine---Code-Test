@@ -16,10 +16,6 @@ the vending machine should return the coins that were inserted.
 // The vending machine should also 
 return the item and any remaining change if the user has inserted more money than the item costs
 */
-// TODO: error when there is .05 left but user hasnt entered a nickel.
-// Soda 1.50, 3 quarters, 9 dime, 0 nickel
-// returns 1 dime, 
-// should be 1 dime and 1 nickel
 const testdata = {
   items: [
     {
@@ -42,12 +38,12 @@ const testdata = {
       value: 0.05
     },
     {
-      coin: 9,
+      // coin: 9,
       name: 'Dime',
       value: 0.10
     },
     {
-      coin: 2,
+      // coin: 2,
       name: 'Quarter',
       value: 0.25
     }
@@ -71,16 +67,17 @@ function VendingMachine() {
     (data.coins) &&
       setCoins(structuredClone(testdata)
         .coins.sort((a, b) => Number(b.value) - Number(a.value))
-        .map((item) => {
-          return item;
-    }));
+        // .map((item) => {
+        //   return item;
+        // })
+        );
     
   }, [data.coins, resetData]);
   
   function reset() {
     setCost(0);
     setTotal(0);
-    setData(testdata);
+    // setData(structuredClone(testdata));
     setResetData(!resetData);
     setMessage(null);
   }
@@ -99,21 +96,17 @@ function VendingMachine() {
       {
         setMessage(null);
         setTotal(doTotalPaid);
-        let con = item;
-        con.coin = (con.coin) ? con.coin + 1 : 1;
+        // let con = item;
+        // con.coin = (con.coin) ? con.coin + 1 : 1;
+        item.coin = (item.coin) ? item.coin + 1 : 1;
 
-        return con;
+        return item;
       } else
       {
         return item;
       }
     }));
   }
-  // function removeCoins() {
-  //   setCoins(coins.map((item) => {
-  //     return item.coin > 0;
-  //   }));
-  // }
   function doTotalPaid() {
     let total = 0;
     coins.map((item) => {
@@ -148,38 +141,35 @@ function VendingMachine() {
     let coinStr = [];
     let totRet = [];
     
-    // return exact coins
     coins.map((item) => {
       if (item.value <= remaining)
       {
-        let tmpCount = 0;
+        let thsCount = 0;
         
         if (item.coin > 0) { 
           const count = Number(item.coin);
           if ((count * Number(item.value)) <= remaining)
           {
-            tmpCount = count;
+            thsCount = count;
             remaining = roundCeil(remaining - (count * Number(item.value)));
           } else
           {
             for (let i = 0; i < count; i++)
             {
               if (roundCeil(remaining) >= item.value) {
-                tmpCount++;
+                thsCount++;
                 remaining = roundCeil(remaining - item.value);
               }
             }
           }
-        } else // fix for remaining with no coins
+        } else
         {
-          tmpCount = roundCeil(remaining / item.value);
+          thsCount = Math.floor(roundCeil(remaining / item.value));
+          remaining = roundCeil(remaining % item.value);
         }
 
-        totRet.push(item.value * tmpCount);
-        coinStr.push(`${ item.name } x ${ tmpCount }`);
-      } else
-      {
-        totRet.push(0);
+        totRet.push(item.value * thsCount);
+        coinStr.push(`${ item.name } x ${ thsCount }`);
       }
     })
     
@@ -206,16 +196,14 @@ function VendingMachine() {
       onClick={coinReturn}
       total={total}
     />
-    {message && <h4 className="message">{message}</h4>}
-    {delivered && <>
-      <h3>Delivered:</h3>
-      <div className="delivered">{delivered}</div>
-    </>
-    }
-    <CoinReturn returns={returns} />
-    {totalReturned > 0 &&
-      <div>Total Returned: {formatMoney(totalReturned)}</div>
-    }
+    <StatusMessage
+      delivered={delivered}
+      message={message}
+    />
+    <CoinReturn
+      returns={returns}
+      totalReturned={totalReturned}
+    />
   </>
 }
 
@@ -266,13 +254,29 @@ const Checkout = ({cost, deliverItem, onClick, total}) => {
   </>
 }
 
-const CoinReturn = ({returns}) => {
+const StatusMessage = ({ delivered, message }) => {
+  return <> 
+    {message &&
+      <h4 className="message">{message}</h4>
+    }
+    {delivered && <>
+        <h3>Delivered:</h3>
+        <div className="delivered">{delivered}</div>
+      </>
+    }
+  </>
+}
+
+const CoinReturn = ({returns, totalReturned}) => {
   return <>
     <h3>Coin return:</h3>
     {(!returns || returns.length == 0) && "*Empty*"}
     {(returns && returns.length > 0) && returns.map((item, i) => {
       return <div key={i} style={{color: "lightblue"}}>{item}</div>
     })}
+    {totalReturned > 0 &&
+      <div>Total Returned: {formatMoney(totalReturned)}</div>
+    }
   </>
 }
 
